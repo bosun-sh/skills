@@ -1,0 +1,15 @@
+interface:
+  display_name: "plot"
+  short_description: "Write layered project specs (concept → umbrellas → feature triplets)"
+  default_prompt: "Use $plot to write concept, umbrella, or feature specs for this project."
+entry: "SKILL.md"
+references:
+  - "references/style-guide.md"
+  - "references/interview-questions.md"
+  - "references/concept.template.spec"
+  - "references/functional.umbrella.template.spec"
+  - "references/technical.umbrella.template.spec"
+  - "references/test.umbrella.template.spec"
+  - "references/feature.functional.template.spec"
+  - "references/feature.technical.template.spec"
+  - "references/feature.test.template.spec"
