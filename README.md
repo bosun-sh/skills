@@ -6,6 +6,22 @@ Skills live under `skills/`, with one directory per skill. Each skill is a
 self-contained package of instructions, references, and optional assets that an
 agent can load when the user's task matches that skill's purpose.
 
+## Installation
+
+Install any skill into your Claude Code project using `npx`:
+
+```bash
+npx skills add https://github.com/bosun-sh/skills.git --skill <skill-name>
+```
+
+For example:
+
+```bash
+npx skills add https://github.com/bosun-sh/skills.git --skill logbook
+npx skills add https://github.com/bosun-sh/skills.git --skill plot
+npx skills add https://github.com/bosun-sh/skills.git --skill ohtools
+```
+
 ## Skills
 
 | Skill | Purpose |
