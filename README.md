@@ -10,6 +10,8 @@ agent can load when the user's task matches that skill's purpose.
 
 | Skill | Purpose |
 | --- | --- |
+| `skills/logbook` | Guidance for working with logbook tasks, lifecycle transitions, hooks, and session startup behavior. |
+| `skills/plot` | Guidance for writing layered project specs using the concept, umbrella, and feature workflow. |
 | `skills/ohtools` | Guidance for creating, extending, reviewing, and releasing Ohtools apps, CLI tools, MCP adapters, and plugins. |
 
 ## Repository Layout
@@ -43,4 +45,4 @@ Every skill should include:
 
 ## Current Status
 
-This repo currently contains one skill: `skills/ohtools`.
+This repo currently contains three skills: `skills/logbook`, `skills/plot`, and `skills/ohtools`.
