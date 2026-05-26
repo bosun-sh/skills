@@ -7,13 +7,41 @@ description: Estimate the smallest reliable LLM for a task, prompt, spec, or sub
 
 Estimate task difficulty against the available model set, then choose the smallest model or subagent assignment that is still likely to succeed.
 
+For model inventory formats and examples, read `references/model-inventory.md`
+when the available models are not obvious from client/runtime context or the
+user prompt.
+
 ## Inputs
 
 - Accept either pasted text, a task prompt, a spec, or a file path.
-- Treat user-supplied candidate models and client-available models as the same pool when both exist.
-- If only one source exists, use that source as the model inventory.
+- Build the model inventory from all available optional sources: client/runtime context, user prompt, and `MODEL_INVENTORY.md` in the skill root.
+- Treat client/runtime inventory as the best signal for models the current client can select directly.
+- Treat user prompt inventory as additive unless the user explicitly restricts the candidate pool.
+- Treat `MODEL_INVENTORY.md` as persistent local configuration that may add models available through external providers, not canonical bundled reference material.
 - When evaluating a subagent, treat the delegated subtask as the unit being estimated, not the whole parent task.
 - Do not force a file format. Read whatever the user gives and extract the task requirements from it.
+
+## Model Inventory
+
+Use every available inventory source and merge them into one candidate pool.
+Distinguish directly selectable client models from models available through
+configured external providers. Only restrict the pool when the user explicitly
+says to, such as "only use A and B" or "restrict to client models."
+
+Track the inventory source and availability in the recommendation:
+
+- `inventory_source`: `runtime`, `prompt`, `file`, any `+` combination, or `none`.
+- `availability: direct` when the current client/runtime can select the model directly.
+- `availability: external` when the model is available through configured provider notes.
+- `availability: unconfirmed` when a model is listed but no access path is clear.
+- `availability: unknown` when no inventory exists.
+
+If no inventory is available:
+
+- Ask the user for the available models and rough smallest-to-largest ordering when a named model recommendation is required.
+- If the user provides inventory and the installed skill location is writable, create or update `MODEL_INVENTORY.md`.
+- If file writes are not possible, provide exact Markdown the user can place in `MODEL_INVENTORY.md`.
+- For subagent decisions that do not require an explicit model override, recommend inherited/default model selection and classify the needed tier instead of inventing model names.
 
 ## Workflow
 
@@ -27,7 +55,7 @@ Estimate task difficulty against the available model set, then choose the smalle
    - Treat hallucination risk, requirement density, and quality sensitivity as first-class signals.
 
 3. Rank the available models.
-   - Use only models that are actually available to the client or explicitly supplied by the user.
+   - Use only models found in client/runtime context, the user prompt, or `MODEL_INVENTORY.md`.
    - Prefer the smallest model that clears the reliability bar for the task.
    - Break ties by lower token cost, shorter latency, and narrower capability than the next larger option.
    - If two models look close, choose the safer one unless the task is clearly low risk.
@@ -35,6 +63,12 @@ Estimate task difficulty against the available model set, then choose the smalle
 4. Escalate when needed.
    - Move up a tier when the task is underspecified, the output will be user-facing and high stakes, or the model would need to simulate too much hidden state.
    - Do not over-optimize into a smaller model if that likely causes retries, rework, or degraded quality.
+
+## Capability Tiers
+
+- `compact`: extraction, classification, simple rewrites, templated output, and localized low-risk edits.
+- `standard`: normal coding, bounded planning, moderate synthesis, and multi-file but well-scoped work.
+- `advanced`: ambiguous goals, long-context synthesis, high-judgment decisions, high-stakes output, and brittle multi-step agentic work.
 
 ## Subagent Spawn
 
@@ -53,9 +87,23 @@ Use Sounder before spawning a subagent when delegation is under consideration.
 
 ## Output
 
-- Return one recommended model as the primary answer.
-- Include a short rationale that names the key decision factors.
-- For subagent decisions, return `spawn: yes/no`, the recommended role, the recommended model only if an override is justified, and a one-sentence rationale.
+- For ordinary model sizing, use:
+  - `model: <name or inherit/default>`
+  - `tier: compact|standard|advanced`
+  - `availability: direct|external|unconfirmed|unknown`
+  - `inventory_source: runtime|prompt|file|runtime+prompt|runtime+file|prompt+file|runtime+prompt+file|none`
+  - `rationale: <one sentence>`
+- For subagent decisions, use:
+  - `spawn: yes|no`
+  - `role: explorer|worker|default`
+  - `model: inherit/default|<name>`
+  - `tier: compact|standard|advanced`
+  - `availability: direct|external|unconfirmed|unknown`
+  - `inventory_source: <sources>`
+  - `rationale: <one sentence>`
+  - `prompt: <compact delegation prompt when useful>`
+- Return one recommended model when inventory is available.
+- If inventory is unavailable, return the required capability tier and whether to use inherited/default selection.
 - Include a compact delegation prompt when it would prevent ambiguity.
 - Optionally include a brief fallback order if the user asked for comparison.
 - Keep the answer compact; this skill exists to reduce token usage while still making a reliable recommendation.
@@ -79,5 +127,5 @@ Use Sounder before spawning a subagent when delegation is under consideration.
 ## Notes
 
 - Avoid generic “best model” answers unless the user explicitly asks for an open-ended recommendation.
-- If the model inventory is missing, say so and infer from the client context only when that context is available.
+- If the model inventory is missing, say so and ask for it when an exact model name is needed.
 - If the task is outside the available model set, recommend the smallest model that is at least close enough, and call out the gap.
