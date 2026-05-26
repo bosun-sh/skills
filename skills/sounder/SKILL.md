@@ -35,12 +35,14 @@ Track the inventory source and availability in the recommendation:
 - `availability: external` when the model is available through configured provider notes.
 - `availability: unconfirmed` when a model is listed but no access path is clear.
 - `availability: unknown` when no inventory exists.
+- `provider` is optional. Use it for external models with a named access path such as OpenRouter, Anthropic, OpenAI, or a local runtime.
 
 If no inventory is available:
 
 - Ask the user for the available models and rough smallest-to-largest ordering when a named model recommendation is required.
-- If the user provides inventory and the installed skill location is writable, create or update `MODEL_INVENTORY.md`.
-- If file writes are not possible, provide exact Markdown the user can place in `MODEL_INVENTORY.md`.
+- If the user provides inventory but does not ask to save it, use it only for the current recommendation.
+- Do not create or update `MODEL_INVENTORY.md` unless the user explicitly asks to persist inventory.
+- If the user asks to save inventory and the installed skill location is writable, update `MODEL_INVENTORY.md`; otherwise provide exact Markdown the user can place there.
 - For subagent decisions that do not require an explicit model override, recommend inherited/default model selection and classify the needed tier instead of inventing model names.
 
 ## Workflow
@@ -87,13 +89,13 @@ Use Sounder before spawning a subagent when delegation is under consideration.
 
 ## Output
 
-- For ordinary model sizing, use:
+- For ordinary model sizing, use exactly:
   - `model: <name or inherit/default>`
   - `tier: compact|standard|advanced`
   - `availability: direct|external|unconfirmed|unknown`
   - `inventory_source: runtime|prompt|file|runtime+prompt|runtime+file|prompt+file|runtime+prompt+file|none`
   - `rationale: <one sentence>`
-- For subagent decisions, use:
+- For subagent decisions, use exactly:
   - `spawn: yes|no`
   - `role: explorer|worker|default`
   - `model: inherit/default|<name>`
@@ -101,11 +103,13 @@ Use Sounder before spawning a subagent when delegation is under consideration.
   - `availability: direct|external|unconfirmed|unknown`
   - `inventory_source: <sources>`
   - `rationale: <one sentence>`
-  - `prompt: <compact delegation prompt when useful>`
+- Add optional fields only when useful, and never emit empty optional fields:
+  - `provider: <name>` when `availability: external` or the access path is known.
+  - `prompt: <delegation prompt>` only when `spawn: yes` and it prevents ambiguity.
+  - `fallback_order: <models>` only when the user asks for comparison or fallback.
+  - `notes: <brief caveat>` only for access gaps, missing inventory, or unsupported model override.
 - Return one recommended model when inventory is available.
 - If inventory is unavailable, return the required capability tier and whether to use inherited/default selection.
-- Include a compact delegation prompt when it would prevent ambiguity.
-- Optionally include a brief fallback order if the user asked for comparison.
 - Keep the answer compact; this skill exists to reduce token usage while still making a reliable recommendation.
 
 ## Decision Rule

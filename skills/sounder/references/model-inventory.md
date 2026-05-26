@@ -65,6 +65,11 @@ and useful notes from the file when present.
 - `unconfirmed`: the model is listed but no access path is clear.
 - `unknown`: no inventory exists.
 
+`provider` is optional. Use it when a model is available through a named access
+path such as OpenRouter, Anthropic, OpenAI, a local runtime, or another
+configured provider. For direct runtime models, omit `provider` unless the
+runtime explicitly exposes one.
+
 Sounder can recommend external models for assignment and estimation, but the
 client/runtime or a separate spawn skill is responsible for executing any
 provider-specific subagent spawning.
@@ -74,11 +79,21 @@ provider-specific subagent spawning.
 When no inventory is available, do not invent exact model names.
 
 For ordinary model sizing, ask the user for available models and rough
-smallest-to-largest ordering. If the user provides inventory and the installed
-skill location is writable, create or update `MODEL_INVENTORY.md` from the
-user's answer. If writes are not possible, return the Markdown the user can
-place in that file.
+smallest-to-largest ordering. If the user provides inventory but does not ask to
+save it, use it only for the current recommendation. Do not create or update
+`MODEL_INVENTORY.md` unless the user explicitly asks to persist inventory. If
+the user asks to save inventory and the installed skill location is writable,
+update `MODEL_INVENTORY.md`; otherwise return the Markdown the user can place in
+that file.
 
 For subagent decisions, a missing inventory does not block delegation. Recommend
 `model: inherit/default` unless the task clearly needs an override, and classify
 the required capability tier as compact, standard, or advanced.
+
+## Local Config Caveat
+
+`MODEL_INVENTORY.md` is mutable local config. Reinstalling or updating the skill
+may overwrite or reset it depending on installer behavior. Treat prompt and
+runtime inventory as authoritative for the current turn, even if the file is
+older, and keep durable model inventory in project or user notes if it must
+survive reinstall.

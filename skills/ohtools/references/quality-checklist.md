@@ -32,6 +32,9 @@ Use this for reviews, compatibility audits, release readiness, and final passes.
   across tests, examples, docs snippets, and stage gates.
 - Release or package changes run `pack:check` and `smoke:packed`.
 - Docs-only changes run link/snippet checks when commands or snippets changed.
+- If expected scripts are absent, use available equivalents in this order:
+  typecheck, tests, lint/check/docs/examples, then safe Ohtools CLI smoke checks.
+  State missing scripts and substitute checks in the final response.
 
 ## Do Not Do
 

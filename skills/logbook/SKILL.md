@@ -11,10 +11,30 @@ tool schemas; this skill defines the operating rules and lifecycle contract.
 
 ## Start Of Session
 
-1. Call `task.current` before anything else.
-2. If it returns a task, read `title`, `description`, and `definition_of_done`.
-3. If it returns nothing, call `task.list` with `{ "status": "todo" }`, choose the
-   highest-value item, then call `task.update` with `{ "new_status": "in_progress" }`.
+Run this only when Logbook is intentionally being used for task work, status
+transitions, hook setup, or session startup. Do not auto-start a Logbook task for
+inspection-only requests.
+
+1. Call `task.current` before starting task work.
+2. If it returns a task, read `title`, `description`, and `definition_of_done`;
+   continue that task and do not list or start another.
+3. If it returns nothing, call `task.list` with `{ "status": "todo" }`.
+4. Start exactly one suitable task only after applying this selection order:
+   user-requested task, matching project or milestone, clearest
+   `definition_of_done`, lower estimation, oldest created or updated task.
+5. If multiple candidates existed, note briefly why the task was selected.
+6. If no suitable task exists, report that no actionable Logbook task is
+   available. Do not create one unless the user asks or discovered work clearly
+   needs tracking.
+
+## Server Availability
+
+- If Logbook MCP tools are unavailable, do not simulate lifecycle changes.
+- Tell the user the Logbook MCP server or tools are not available.
+- Continue only with read-only local assessment when files are present and the
+  user's request allows it.
+- Never claim task status changed unless the MCP response succeeded with
+  `ok: true`.
 
 ## Tool Use Rules
 
@@ -100,6 +120,16 @@ The supported event today is `task.status_changed`. Hook scripts receive:
 
 Guard against missing values and exit `0` when the hook should skip work.
 
+Hook IDs must be lowercase slug IDs with no path separators and no `..`. Before
+creating `.logbook/hooks/<id>/`, check whether the directory, `config.json`, or
+`script.ts` already exists. Do not overwrite existing hook files without
+explicit user approval.
+
+Generated hook scripts must be minimal, idempotent, and environment-guarded.
+`config.json` commands should target the local hook script path and avoid
+destructive shell chains. Validate with `hook.run` when available; otherwise
+inspect the config and script shape only.
+
 ### Minimal Script Shape
 
 ```typescript
@@ -110,22 +140,16 @@ if (taskId === "") process.exit(0)
 process.exit(0)
 ```
 
-## Canonical Tool IDs
+## Tool Discovery And Naming
 
-Treat these dotted lowercase IDs as the source of truth:
+The MCP server's exposed tool list and schemas are authoritative. Prefer live
+tool discovery over static names, and do not duplicate MCP input schemas in this
+skill.
 
-- `task.create`, `task.get`, `task.list`, `task.current`, `task.update`,
-  `task.edit`, `task.assign.session`, `task.assign.model`,
-  `task.assign.phase-model`, `task.estimate`
-- `epic.create`, `epic.get`, `epic.list`, `epic.update`, `epic.delete`
-- `story.create`, `story.get`, `story.list`, `story.update`, `story.delete`
-- `context.create`, `context.get`, `context.list`, `context.update`,
-  `context.delete`, `context.attach`, `context.detach`, `context.search`
-- `sync.linear.pull`, `sync.linear.push`, `sync.linear.status`,
-  `sync.conflicts.list`, `sync.conflicts.resolve`
-- `workspace.init`, `workspace.status`
-- `hook.list`, `hook.run`
-- `plugin.list`
+Expected capabilities include current task lookup, task listing, lifecycle
+updates, task metadata edits, task creation, hook listing, and hook execution.
+If an expected tool is missing or renamed, stop that call path and report the
+missing capability instead of guessing a replacement.
 
 ## Non-Goals
 

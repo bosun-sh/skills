@@ -9,6 +9,7 @@ from pathlib import Path
 
 
 SKILL_NAME_RE = re.compile(r"^[a-z0-9][a-z0-9-]{0,62}$")
+MUTABLE_CONFIG_FILES = {"MODEL_INVENTORY.md"}
 
 
 def frontmatter_value(frontmatter: str, key: str) -> str | None:
@@ -21,6 +22,79 @@ def frontmatter_value(frontmatter: str, key: str) -> str | None:
     if len(value) >= 2 and value[0] == value[-1] and value[0] in {"'", '"'}:
         return value[1:-1]
     return value
+
+
+def metadata_value(metadata: str, key: str) -> str | None:
+    pattern = re.compile(rf"^{re.escape(key)}:\s*(.+?)\s*$", re.MULTILINE)
+    match = pattern.search(metadata)
+    if match is None:
+        return None
+
+    value = match.group(1).strip()
+    if len(value) >= 2 and value[0] == value[-1] and value[0] in {"'", '"'}:
+        return value[1:-1]
+    return value
+
+
+def metadata_references(metadata: str) -> list[str]:
+    references: list[str] = []
+    in_references = False
+
+    for line in metadata.splitlines():
+        if re.match(r"^\S", line):
+            in_references = line.strip() == "references:"
+            continue
+
+        if not in_references:
+            continue
+
+        match = re.match(r"^\s+-\s*(.+?)\s*$", line)
+        if match is None:
+            if line.strip():
+                in_references = False
+            continue
+
+        value = match.group(1).strip()
+        if len(value) >= 2 and value[0] == value[-1] and value[0] in {"'", '"'}:
+            value = value[1:-1]
+        references.append(value)
+
+    return references
+
+
+def validate_agents_openai(skill_dir: Path, metadata: str) -> list[str]:
+    errors: list[str] = []
+
+    if re.search(r"^interface:\s*$", metadata, re.MULTILINE) is None:
+        errors.append("agents/openai.yaml missing top-level interface")
+
+    for key in ("display_name", "short_description", "default_prompt"):
+        if re.search(rf"^\s+{key}:\s*.+$", metadata, re.MULTILINE) is None:
+            errors.append(f"agents/openai.yaml missing interface.{key}")
+
+    entry = metadata_value(metadata, "entry")
+    if entry != "SKILL.md":
+        errors.append('agents/openai.yaml entry must be "SKILL.md"')
+
+    references = metadata_references(metadata)
+    for reference in references:
+        if reference in MUTABLE_CONFIG_FILES:
+            errors.append(f"agents/openai.yaml references mutable config {reference!r}")
+            continue
+
+        reference_path = Path(reference)
+        if reference_path.is_absolute() or ".." in reference_path.parts:
+            errors.append(f"agents/openai.yaml reference {reference!r} must be a relative path inside the skill")
+            continue
+
+        target = skill_dir / reference_path
+        if not target.is_file():
+            errors.append(f"agents/openai.yaml reference {reference!r} must point to an existing file")
+
+    if skill_dir.name == "sounder" and "references/model-inventory.md" not in references:
+        errors.append("agents/openai.yaml must reference references/model-inventory.md")
+
+    return errors
 
 
 def validate_skill(skill_dir: Path) -> list[str]:
@@ -63,9 +137,7 @@ def validate_skill(skill_dir: Path) -> list[str]:
 
     if agents_openai.exists():
         metadata = agents_openai.read_text(encoding="utf-8")
-        for key in ("display_name", "short_description", "default_prompt"):
-            if re.search(rf"^\s+{key}:\s*.+$", metadata, re.MULTILINE) is None:
-                errors.append(f"agents/openai.yaml missing interface.{key}")
+        errors.extend(validate_agents_openai(skill_dir, metadata))
 
     return errors
 

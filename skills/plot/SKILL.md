@@ -15,12 +15,20 @@ each layer is approved.
 - Adding a feature slice to a project that already has umbrella specs.
 - Reviewing or extending existing specs for cross-link correctness.
 
-Do not use Plot to document finished code after the fact without running the
-full interview loop.
+Plot specs describe intended behavior. Existing code may inform questions, but
+implementation-derived behavior becomes required only after the user confirms it
+as intended.
 
 ## The Layered Workflow
 
-Plot always inspects `docs/` first to determine which stage applies.
+Plot always inspects `docs/` first to determine which stage applies. Stage
+detection depends on valid spec state, not file existence.
+
+Before selecting a stage, inspect existing `docs/**/*.spec` and classify each as
+`missing`, `valid`, `malformed_xml`, `wrong_root`,
+`missing_required_sections`, `invalid_extends`, `placeholder_only`, or
+`partial_triplet`. If a parent spec is invalid, stop normal progression and
+enter recovery before drafting descendants.
 
 ### Stage 1 — Concept
 
@@ -70,6 +78,30 @@ the relevant umbrella specs and the `<acceptance_matrix>` in the umbrella
 
 A user may skip a gate explicitly (e.g., "skip ahead, I already have the
 concept"). Note the override in conversation. Do not record it in any spec file.
+Absence of user response is never approval.
+
+### Recovery Mode
+
+- `malformed_xml`: do not overwrite; report the path and parse error, then ask
+  whether to repair from visible content, regenerate through interview, or leave
+  untouched.
+- `placeholder_only`: treat as absent unless the user explicitly says it is
+  intentionally approved.
+- `missing_required_sections`: ask only for missing sections, then rewrite the
+  full spec.
+- `invalid_extends`: fix only after user approval and XML validation.
+- `partial_triplet`: resume at the first missing or unapproved file in order:
+  feature functional, technical, then test.
+
+Never advance to the next stage while recovery is unresolved.
+
+### Non-Interactive Gates
+
+If Plot cannot ask for and receive explicit approval, it may draft at most the
+current target spec and must stop. Report the target path, validation status,
+unresolved approval gate, and exact next approval phrase needed. Gate overrides
+require an explicit phrase in the current request, such as "skip the concept
+gate" or "approve docs/concept.spec".
 
 ## Interview Loop
 
@@ -81,8 +113,23 @@ Each spec type runs the same loop:
 2. **Ask interview questions** from `references/interview-questions.md` for
    that spec type — one at a time unless several are obviously batchable.
 3. **Draft the spec** into the target path using the matching template.
-4. **Show the file path** and ask for review. Do not progress until the user
+4. **Validate the spec** before presenting it.
+5. **Show the file path** and ask for review. Do not progress until the user
    explicitly approves.
+
+## Validation Checklist
+
+- State check: `docs/` inspected; invalid parent specs block descendants.
+- Interview check: required sections are populated from user-approved answers or
+  parent specs.
+- XML check: well-formed XML, `<spec>` root, required attributes, and required
+  top-level tags per `references/style-guide.md`.
+- Link check: `extends`, `rolls_up_to`, `covers`, `<cross_references>`, and
+  `<acceptance_matrix>` resolve.
+- Gate check: current spec approved before the next spec starts.
+
+If validation fails, fix the draft before presenting it. If fixing requires new
+product intent, ask an interview question instead of guessing.
 
 ## Layout & Naming
 

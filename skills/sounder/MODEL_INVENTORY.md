@@ -5,6 +5,9 @@ in smallest-to-largest reliable order. Include models the client can select
 directly and models available through configured external providers.
 Client/runtime inventory and models named in the current prompt compose with
 this file unless the user explicitly asks to restrict the candidate pool.
+This file is mutable local config. Reinstalling or updating the skill may reset
+it depending on installer behavior; keep durable inventory in project or user
+notes if it must survive reinstall.
 
 ## Models
 

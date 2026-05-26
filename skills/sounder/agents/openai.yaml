@@ -3,3 +3,5 @@ interface:
   short_description: "Size tasks for LLMs and subagents"
   default_prompt: "Use $sounder to estimate the smallest reliable model or subagent assignment for this task."
 entry: "SKILL.md"
+references:
+  - "references/model-inventory.md"
