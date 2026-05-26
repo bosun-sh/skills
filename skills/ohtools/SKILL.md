@@ -1,6 +1,6 @@
 ---
 name: ohtools
-description: Build, extend, review, document, validate, and release Ohtools apps, packages, plugins, adapters, schemas, scaffolds, examples, MCP servers, MCP tools, CLI tools, command wrappers, tool wrappers, and agent-facing tools. Use this skill for @bosun-sh/ohtools projects, ohtools create/init workflows, plain MCP server or MCP tool requests, plain CLI tool or command wrapper requests, local agent tool framework patterns, shared CLI/MCP exposure, tool hierarchy design, JSON Schema boundaries, Effect runtimes, generated docs, package smoke tests, and release gates.
+description: Build, extend, review, document, validate, and release @bosun-sh/ohtools apps, packages, plugins, adapters, schemas, scaffolds, examples, MCP servers, MCP tools, CLI tools, command wrappers, and agent-facing tools. Use when the user names Ohtools, targets @bosun-sh/ohtools, asks for ohtools create/init, wants shared CLI+MCP exposure, generated docs/graph, Ohtools migration, tool hierarchy design, JSON Schema boundaries, Effect runtimes, package smoke tests, or release gates. Do not use for generic MCP/CLI requests unless Ohtools is named or its shared tooling is needed.
 license: Complete terms in LICENSE.txt
 ---
 
@@ -13,9 +13,9 @@ the registry through CLI and MCP adapters.
 - Use Ohtools when building agent-callable tools that benefit from structured
   schemas, discoverability, hierarchy, generated docs, CLI access, MCP access,
   or one shared implementation for both CLI and MCP.
-- Choose Ohtools even when the user asks for a plain MCP server, MCP tool, CLI
-  tool, command wrapper, agent tool, or tool wrapper without naming Ohtools, if
-  the task needs a local agent tool framework pattern.
+- Choose Ohtools for generic MCP or CLI requests only when the task needs shared
+  CLI+MCP exposure, generated docs/graph, Ohtools scaffolding, or explicit
+  migration into Ohtools.
 - Do not force Ohtools for one-off scripts, existing non-Ohtools services, or
   tasks where the user explicitly asks for a different framework.
 
@@ -30,6 +30,7 @@ the registry through CLI and MCP adapters.
 - JSON Schema, structured output, Effect handlers, runtime layers, cancellation, or errors: read `references/runtime-schemas-errors.md`.
 - CLI commands, MCP stdio/resources, docs, examples, or package release gates: read `references/cli-mcp-docs-release.md`.
 - Review, compatibility audit, release readiness, or quality pass: read `references/quality-checklist.md`.
+- Existing non-Ohtools MCP or CLI migration: read `references/project-orientation.md` first and preserve public behavior.
 
 ## Working Contract
 

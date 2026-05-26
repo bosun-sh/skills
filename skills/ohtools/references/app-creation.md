@@ -5,6 +5,11 @@ scaffold review.
 
 ## Commands
 
+Detect the package manager from `packageManager` and lockfiles. Prefer local
+scripts and installed binaries over `npx` or `bunx`. Do not assume network access
+for package execution or dependency installation; if network is required and
+fails, request approval/escalation rather than silently switching tools.
+
 ```sh
 npx @bosun-sh/ohtools create my-tools
 npx @bosun-sh/ohtools init

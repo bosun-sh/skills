@@ -6,6 +6,9 @@ validation, pack checks, and release readiness.
 ## CLI
 
 The package binary is `ohtools`. App commands require an app entry:
+Prefer local scripts and installed binaries over `bunx` or `npx`. Do not assume
+network access for package execution; if package download is required and fails,
+request approval/escalation instead of silently switching tools.
 
 ```sh
 bunx ohtools --app ./src/ohtools.ts list
@@ -82,6 +85,12 @@ Stage expectations in the Ohtools workspace:
 - `validate:stage4`: Stage 3 plus docs links and snippets.
 - `validate:stage5`: Stage 4 plus `pack:check` and `smoke:packed`.
 - `release:check`: release-blocking local validation, currently Stage 5.
+
+Before running stage scripts, check whether they exist. If expected validation
+scripts are absent, use available equivalents in this order: typecheck script,
+test or focused test command, lint/check/docs/example scripts, then safe Ohtools
+CLI smoke checks such as `list`, `explore`, `docs`, `graph`, and one safe `run`.
+Report which expected scripts were missing and which substitute checks ran.
 
 `pack:check` must verify built JS, declarations, binary, skills, templates, and
 package file inclusion. `smoke:packed` must verify the packed tarball can
