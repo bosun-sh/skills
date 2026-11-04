@@ -1,5 +1,5 @@
 interface:
   display_name: "Logbook"
   short_description: "Operate logbook tasks and hooks correctly"
-  default_prompt: "Use $logbook to work with logbook tasks, status transitions, hook scaffolding, and session startup."
+  default_prompt: "Use $logbook to work with logbook tasks, status transitions, hook scaffolding, and session startup, and reviewing tasks waiting on the user."
 entry: "SKILL.md"
