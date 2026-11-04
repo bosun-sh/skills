@@ -1,6 +1,6 @@
 ---
 name: logbook
-description: Operate against a logbook MCP server with the correct task lifecycle, need-info reply cycle, hook scaffolding, and one-task-at-a-time workflow. Use this skill when the user asks to work with logbook tasks, status transitions, hook setup, or session startup behavior.
+description: Operate against a logbook MCP server with the correct task lifecycle, need-info reply cycle, hook scaffolding, and one-task-at-a-time workflow. Use this skill when the user asks to work with logbook tasks, status transitions, hook setup, or session startup behavior, or invokes `/logbook` to review tasks waiting on them.
 license: Complete terms in LICENSE.txt
 ---
 
@@ -8,6 +8,23 @@ license: Complete terms in LICENSE.txt
 
 Use this skill when working with a logbook MCP server. The server already exposes
 tool schemas; this skill defines the operating rules and lifecycle contract.
+
+## When Invoked Directly As `/logbook`
+
+1. Find the board: the current repo's `.logbook/`. If there is none and the
+   folder holds several repos, list the boards found and ask which one. If there
+   are none, say so and suggest `logbook init`; never run it unasked.
+2. List `need_info`, `blocked` and `pending_review` tasks, each with its last
+   comment, and ask the user to answer, unblock or approve. Apply their decision
+   with `task.update` (reply via `comment.replyToCommentId`, then the status).
+   Never move `pending_review` to `done` without the user's explicit approval.
+3. If nothing is waiting, follow Start Of Session (`task.current`, then the
+   oldest suitable `todo`). With no task, say the board is clear and offer to
+   show the backlog; do not promote backlog tasks unasked.
+4. Work the task to its definition of done, then move it to `pending_review`
+   with a comment: what changed, how it was checked, what is left. Stop after
+   one task unless asked.
+5. Do not commit or push unless the user asks.
 
 ## Start Of Session
 
@@ -29,12 +46,14 @@ inspection-only requests.
 
 ## Server Availability
 
-- If Logbook MCP tools are unavailable, do not simulate lifecycle changes.
-- Tell the user the Logbook MCP server or tools are not available.
-- Continue only with read-only local assessment when files are present and the
-  user's request allows it.
-- Never claim task status changed unless the MCP response succeeded with
-  `ok: true`.
+- If Logbook MCP tools are absent, use the CLI when `logbook` is installed:
+  `logbook task:list --status "*"`, `logbook task:update ...`. Each command
+  prints one JSON envelope; check `ok`. Details:
+  https://github.com/bosun-sh/logbook#cli
+- Never pass `--help` to a subcommand: it runs the command instead.
+- If neither MCP nor CLI is available, do not simulate lifecycle changes; tell
+  the user and continue only with read-only local assessment.
+- Never claim task status changed unless the response had `ok: true`.
 
 ## Tool Use Rules
 
@@ -155,4 +174,4 @@ missing capability instead of guessing a replacement.
 
 - Do not document MCP input schemas.
 - Do not document Linear or GitHub sync internals.
-- Do not add CLI flag references.
+- Do not document CLI flags; link to the logbook README instead.
